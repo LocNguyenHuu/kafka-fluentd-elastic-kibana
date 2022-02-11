@@ -37,7 +37,7 @@ services:
     networks:
       - test_net
     ports:
-      - "9000:9000"
+      - "9999:9000"
     environment:
       KAFKA_BROKERCONNECT: "kafka:29092"
       JVM_OPTS: "-Xms256M -Xmx512M -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"

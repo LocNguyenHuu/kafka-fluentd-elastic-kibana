@@ -1,4 +1,74 @@
-## Fluentd with elasticsearch and kibana 
+## Collect raw log by Fluentd to Kafka, ElasticSearch and Kibana 
+
+## I. High level architecture
+
+![alt text](./docs/imgs/efk-high-level.png)
+
+- In here, we collect raw log from multiple source using Fluentd. After that, Fluentd send log to Kafka.
+- Sync data from Kafka to ElasticSearch
+- Using Prometheus, Grafana to monitor Elastic cluster health
+## II. Deployment guide:
+
+### 1. Run docker-compose:
+```shell
+docker-compose -f docker-compose.yaml up -d
+```
+### 2. Setup Kafka-connect-ElasticSearch plugin:
+- Please take a look on [main repo](https://github.com/confluentinc/kafka-connect-elasticsearch)
+- Please **read carefully** [technical document](https://docs.confluent.io/kafka-connect-elasticsearch/current/overview.html)
+- Download ElasticSearch Sink Connector plugin at [link](https://www.confluent.io/hub/confluentinc/kafka-connect-elasticsearch?_ga=2.186461033.1146845704.1640941015-936199150.1640662320)
+
+```shell
+curl --location --request GET 'localhost:8083/connector-plugins' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "name": "simple-elasticsearch-connector",
+    "config": {
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "connection.url": "http://es01:9200",
+        "tasks.max": "1",
+        "topics": "fluentd-topic",
+        "type.name": "_doc"
+    }
+}'
+```
+
+```shell
+curl --location --request POST 'localhost:8083/connectors' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "name": "simple-elasticsearch-connector",
+    "config": {
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "connection.url": "http://es01:9200",
+        "tasks.max": "1",
+        "topics": "fluentd-topic",
+        "type.name": "_doc",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "false",
+        "schema.ignore": "true",
+        "key.ignore": "true"
+    }
+}'
+```
+
+```shell
+curl --location --request PUT 'localhost:8083/connectors/simple-elasticsearch-connector/config' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+    "connection.url": "http://es01:9200",
+    "tasks.max": "1",
+    "topics": "fluentd-topic",
+    "name": "simple-elasticsearch-connector",
+    "type.name": "_doc",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "schema.ignore": "true",
+    "key.ignore": "true"
+}'
+```
+### 3. Verify infrastructure:
 
 ### Docker-compose.yml
 ```
@@ -86,3 +156,11 @@ If you alreay have the image and just want to rebuild fluentd with the new debia
 
 ### Site Info
 http://localhost:5601
+
+## III. Contributor guide:
+- Please fork the repo and make a Pull Request
+- After taking a serious review, we will accept your Pull Request as well
+
+## IV. License MIT
+
+Open source MIT license
