@@ -164,3 +164,6 @@ http://localhost:5601
 ## IV. License MIT
 
 Open source MIT license
+
+# Support
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/StephenN)
